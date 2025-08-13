@@ -1,6 +1,5 @@
 import { Document, Types } from "mongoose";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 
 import Auth from "../model/auth.model";
 import AppError from "../../../utils/customError/AppError";

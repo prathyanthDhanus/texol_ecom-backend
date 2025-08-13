@@ -19,5 +19,5 @@ const authSchema: Schema = new Schema({
 });
 
 
-const Auth = mongoose.model<IAuth>("Auth", authSchema);
+const Auth = mongoose.model<IAuth>("User", authSchema);
 export default Auth;
