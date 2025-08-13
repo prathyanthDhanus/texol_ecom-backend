@@ -1,17 +1,18 @@
-import { RequestHandler } from "express";
+import { RequestHandler, Request, Response, NextFunction } from "express";
 import { Schema } from "joi";
 import { joiValidate } from "../middleware/joiValidation";
 import { tryCatch } from "../middleware/tryCatch";
 
-type ControllerFunction = (
-  req: Parameters<RequestHandler>[0],
-  res: Parameters<RequestHandler>[1],
-  next: Parameters<RequestHandler>[2]
-) => Promise<any>;
+// Allow Response or void for compatibility with Express
+type ControllerFunction<Params = {}, Body = any, Query = any> = (
+  req: Request<Params, any, Body, Query>,
+  res: Response,
+  next?: NextFunction
+) => Promise<Response | void> | Response | void;
 
-export function validateAndHandle(
+export function validateAndHandle<Params = {}, Body = any, Query = any>(
   schema: Schema | null,
-  controller: ControllerFunction
+  controller: ControllerFunction<Params, Body, Query>
 ): RequestHandler[] {
   const middlewares: RequestHandler[] = [];
 
@@ -19,6 +20,15 @@ export function validateAndHandle(
     middlewares.push(joiValidate(schema));
   }
 
-  middlewares.push(tryCatch(controller));
+  const handler: RequestHandler = async (req, res, next) => {
+    try {
+      await controller(req as Request<Params, any, Body, Query>, res, next);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  middlewares.push(tryCatch(handler));
+
   return middlewares;
 }

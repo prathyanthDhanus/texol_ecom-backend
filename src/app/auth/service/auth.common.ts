@@ -26,6 +26,7 @@ if (!secretKey) {
 }
 
 // ・・・・・・・・・・・・・・・ Generate token ・・・・・・・・・・・・・・・
+
 export const tokenService = async (
   userId: string,
   role: string

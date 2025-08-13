@@ -2,7 +2,11 @@ import express from "express";
 import { RequestHandler } from "express";
 
 import { validateAndHandle } from "../../utils/helper/ValidateAndHandle";
-import { registerSchema, loginSchema } from "./auth.validator";
+import {
+  registerSchema,
+  loginSchema,
+  refreshTokenSchema,
+} from "./auth.validator";
 import { register, login } from "./service/auth.controller";
 import { refreshTokenService } from "./service/auth.common";
 
@@ -15,6 +19,10 @@ router.post(
 router.post(
   "/login",
   validateAndHandle(loginSchema, login) as RequestHandler[]
+);
+router.post(
+  "/refresh-token",
+  validateAndHandle(refreshTokenSchema, refreshTokenService) as RequestHandler[]
 );
 
 export const Auth_Router = router;
