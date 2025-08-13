@@ -13,3 +13,8 @@ export const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
 });
+//================== Refreshtoken validator =================
+export const refreshTokenSchema = Joi.object({
+  token: Joi.string().required()
+  
+});

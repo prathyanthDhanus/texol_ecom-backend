@@ -5,7 +5,7 @@ type ControllerFunction = (
   req: Request,
   res: Response,
   next: NextFunction
-) => Promise<void>;
+) => Promise<void> | any
 
 export const tryCatch = (controller: ControllerFunction): RequestHandler => {
   return async (req: Request, res: Response, next: NextFunction) => {
