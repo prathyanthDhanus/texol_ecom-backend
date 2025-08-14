@@ -6,6 +6,7 @@ import {
   getProducts,
   updateProduct,
   deleteProduct,
+  restoreProduct
 } from "./service/product.controller";
 import multer from "multer";
 
@@ -26,7 +27,9 @@ router.put(
   validateAndHandle(productUpdateSchema, updateProduct)
 );
 
+
 router.patch("/:productId", deleteProduct);
+router.patch("/:productId/restore", restoreProduct);
 
 export const Product_Router = router;
 export default Product_Router;
