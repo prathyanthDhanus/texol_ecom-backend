@@ -18,7 +18,17 @@ export const categorySchema = Joi.object({
 export const categoryUpdateSchema = Joi.object({
   name: Joi.string().trim().min(3).max(50).optional(),
   description: Joi.string().trim().min(5).max(200).optional(),
-}).or("name", "description") 
+  isDeleted: Joi.boolean().optional(),
+})
+  .or("name", "description", "isDeleted")
   .messages({
-    "object.missing": "At least one field (name or description) is required to update",
+    "object.missing": "At least one field must be provided for update",
   });
+//================ Category restore schema ==================
+export const categoryRestoreSchema = Joi.object({
+  isDeleted: Joi.boolean().valid(false).required(),
+}).messages({
+  "boolean.base": "isDeleted must be a boolean",
+  "any.only": "isDeleted must be false for restoration",
+  "any.required": "isDeleted is required for restoration",
+});

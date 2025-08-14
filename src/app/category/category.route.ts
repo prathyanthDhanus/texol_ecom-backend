@@ -1,11 +1,16 @@
 import express from "express";
 import { validateAndHandle } from "../../utils/helper/ValidateAndHandle";
-import { categorySchema, categoryUpdateSchema } from "./category.validator";
+import {
+  categorySchema,
+  categoryUpdateSchema,
+  categoryRestoreSchema,
+} from "./category.validator";
 import {
   createCategory,
   getCategories,
   updateCategory,
   deleteCategory,
+  restoreCategory,
 } from "./service/category.controller";
 
 const router = express.Router();
@@ -17,6 +22,11 @@ router.get("/", getCategories);
 router.put(
   "/:categoryId",
   validateAndHandle(categoryUpdateSchema, updateCategory)
+);
+
+router.patch(
+  "/:categoryId/restore",
+  validateAndHandle(categoryRestoreSchema, restoreCategory)
 );
 router.patch("/:categoryId", deleteCategory);
 

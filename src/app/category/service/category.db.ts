@@ -39,7 +39,7 @@ export const getCategoriesDb = async (
   const skip = (page - 1) * limit;
 
   const [categories, total] = await Promise.all([
-    Category.find({ isDeleted: false }).skip(skip).limit(limit),
+    Category.find().skip(skip).limit(limit),
     Category.countDocuments({ isDeleted: false }),
   ]);
 
@@ -55,17 +55,27 @@ interface UpdateCategoryParams {
   categoryId: string;
   name: string;
   description?: string;
+  isDeleted?: boolean;
 }
 // 📌
 export const updateCategoryDb = async ({
   categoryId,
   name,
   description,
+  isDeleted,
 }: UpdateCategoryParams): Promise<ICategory> => {
+  const updateData: Partial<UpdateCategoryParams> = {};
+  if (name !== undefined) updateData.name = name;
+  if (description !== undefined) updateData.description = description;
+  if (isDeleted !== undefined) updateData.isDeleted = isDeleted;
+
   const updatedCategory = await Category.findByIdAndUpdate(
-    { _id: categoryId, isDeleted: false },
-    { name, description },
-    { new: true, runValidators: true }
+    categoryId,
+    updateData,
+    {
+      new: true,
+      runValidators: true,
+    }
   );
 
   if (!updatedCategory) {
@@ -79,6 +89,30 @@ export const updateCategoryDb = async ({
   return updatedCategory;
 };
 
+// ・・・・・・・・・・・・・・・  Restore a category ・・・・・・・・・・・・・・・
+interface DeleteCategoryParams {
+  categoryId: string;
+}
+// 📌
+export const restoreCategoryDb = async (
+  categoryId: string
+): Promise<ICategory> => {
+  const restoredCategory = await Category.findByIdAndUpdate(
+    categoryId,
+    { isDeleted: false },
+    { new: true, runValidators: true }
+  );
+
+  if (!restoredCategory) {
+    throw new AppError(
+      "Category not found",
+      "Resource not found: Category does not exist",
+      404
+    );
+  }
+
+  return restoredCategory;
+};
 // ・・・・・・・・・・・・・・・  Delete a category ・・・・・・・・・・・・・・・
 interface DeleteCategoryParams {
   categoryId: string;
