@@ -4,6 +4,7 @@ import {
   getProductsDb,
   updateProductDb,
   deleteProductDb,
+  restoreProductDb
 } from "./product.db";
 import { uploadToCloudinary } from "../../../utils/cloudinary/cloudinary";
 
@@ -113,6 +114,22 @@ export const updateProduct = async (
   });
 };
 
+// ・・・・・・・・・・・・・・・  Restore Product ・・・・・・・・・・・・・・・
+
+// 📌
+export const restoreProduct = async (
+  req: Request<{ productId: string }>,
+  res: Response
+) => {
+  const { productId } = req.params;
+  const deletedProduct = await restoreProductDb(productId);
+
+  return res.status(200).json({
+    status: "success",
+    message: "Product restored successfully",
+    data: deletedProduct,
+  });
+};
 // ・・・・・・・・・・・・・・・  Delete Product ・・・・・・・・・・・・・・・
 
 // 📌

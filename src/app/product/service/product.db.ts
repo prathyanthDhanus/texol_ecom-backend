@@ -58,11 +58,11 @@ export const getProductsDb = async (
   const skip = (page - 1) * limit;
 
   const [products, total] = await Promise.all([
-    Product.find({ isDeleted: false })
+    Product.find()
       .populate("category", "name")
       .skip(skip)
       .limit(limit),
-    Product.countDocuments({ isDeleted: false }),
+    Product.countDocuments(),
   ]);
 
   return {
@@ -107,6 +107,26 @@ export const updateProductDb = async ({
   return updatedProduct;
 };
 
+// ・・・・・・・・・・・・・・・  Restore Product ・・・・・・・・・・・・・・・
+
+// 📌
+export const restoreProductDb = async (productId: string): Promise<IProduct> => {
+  const deletedProduct = await Product.findByIdAndUpdate(
+    productId,
+    { isDeleted: false },
+    { new: true }
+  );
+
+  if (!deletedProduct) {
+    throw new AppError(
+      "Product not found",
+      "Resource not found: Product does not exist",
+      404
+    );
+  }
+
+  return deletedProduct;
+};
 // ・・・・・・・・・・・・・・・  Delete Product ・・・・・・・・・・・・・・・
 
 // 📌
