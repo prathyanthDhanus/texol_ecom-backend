@@ -4,6 +4,7 @@ import {
   getCategoriesDb,
   updateCategoryDb,
   deleteCategoryDb,
+  restoreCategoryDb
 } from "./category.db";
 
 // ・・・・・・・・・・・・・・・   Create category  ・・・・・・・・・・・・・・・
@@ -11,6 +12,7 @@ import {
 interface categoryRequestBody {
   name: string;
   description: string;
+  isDeleted?: boolean;
 }
 // 📌
 export const createCategory = async (
@@ -53,18 +55,37 @@ export const updateCategory = async (
   req: Request<{ categoryId: string }, {}, categoryRequestBody>,
   res: Response
 ) => {
-  const { name, description } = req.body;
+  const { name, description,isDeleted } = req.body;
   const { categoryId } = req.params;
+  
   const updatedCategory = await updateCategoryDb({
     categoryId,
     name,
     description,
+    isDeleted
   });
 
   return res.status(200).json({
     status: "success",
     message: "Category updated successfully",
     data: updatedCategory,
+  });
+};
+// ・・・・・・・・・・・・・・・  Restore a category ・・・・・・・・・・・・・・・
+
+// 📌
+export const restoreCategory = async (
+  req: Request<{ categoryId: string }>,
+  res: Response
+) => {
+  const { categoryId } = req.params;
+  
+  const restoredCategory = await restoreCategoryDb(categoryId);
+
+  return res.status(200).json({
+    status: "success",
+    message: "Category restored successfully",
+    data: restoredCategory,
   });
 };
 
