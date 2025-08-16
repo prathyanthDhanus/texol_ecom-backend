@@ -90,16 +90,17 @@ A robust Node.js/TypeScript backend API for an e-commerce platform with authenti
 - `PATCH /api/v1/categories/:id/restore` - Restore category (Admin only)
 
 ### Products
-- `GET /api/v1/products` - Get all products
+- `GET /api/v1/products` - Get all products (includes stock status)
+- `GET /api/v1/products/:id` - Get single product (includes stock status)
 - `POST /api/v1/products` - Create product (Admin only)
 - `PUT /api/v1/products/:id` - Update product (Admin only)
 - `PATCH /api/v1/products/:id` - Delete product (Admin only)
 - `PATCH /api/v1/products/:id/restore` - Restore product (Admin only)
 
 ### Cart
-- `GET /api/v1/cart` - Get user's cart
-- `POST /api/v1/cart/add` - Add item to cart
-- `PUT /api/v1/cart/update/:itemId` - Update cart item quantity
+- `GET /api/v1/cart` - Get user's cart (includes stock status for each item)
+- `POST /api/v1/cart/add` - Add item to cart (validates stock availability)
+- `PUT /api/v1/cart/update/:itemId` - Update cart item quantity (validates stock availability)
 - `DELETE /api/v1/cart/remove/:itemId` - Remove item from cart
 - `DELETE /api/v1/cart/clear` - Clear entire cart
 
@@ -117,7 +118,7 @@ A robust Node.js/TypeScript backend API for an e-commerce platform with authenti
 ### Orders
 - `GET /api/v1/orders` - Get orders (user's own or all for admin)
 - `GET /api/v1/orders/:id` - Get specific order
-- `POST /api/v1/orders` - Create new order
+- `POST /api/v1/orders` - Create new order (validates stock availability)
 - `PUT /api/v1/orders/:id` - Update order (Admin only)
 - `DELETE /api/v1/orders/:id` - Delete order (Admin only)
 

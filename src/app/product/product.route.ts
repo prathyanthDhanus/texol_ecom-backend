@@ -4,6 +4,7 @@ import { productSchema, productUpdateSchema } from "./product.validator";
 import {
   createProduct,
   getProducts,
+  getProduct,
   updateProduct,
   deleteProduct,
   restoreProduct,
@@ -40,6 +41,12 @@ const routes: RouteDefinitionWithUploads[] = [
     path: "/",
     roles: adminAndUser,
     handler: getProducts as unknown as RequestHandler,
+  },
+  {
+    method: "get",
+    path: "/:productId",
+    roles: adminAndUser,
+    handler: getProduct as unknown as RequestHandler,
   },
   {
     method: "put",

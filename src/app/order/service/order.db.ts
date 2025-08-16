@@ -50,10 +50,18 @@ export const createOrderDb = async ({
         );
       }
 
+      if (product.stock === 0) {
+        throw new AppError(
+          `Product out of stock: ${product.name}`,
+          `Sorry, ${product.name} is currently out of stock`,
+          400
+        );
+      }
+
       if (product.stock < item.quantity) {
         throw new AppError(
           `Insufficient stock for product: ${product.name}`,
-          `Only ${product.stock} items available`,
+          `Sorry, only ${product.stock} items of ${product.name} are available`,
           400
         );
       }

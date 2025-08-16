@@ -61,11 +61,12 @@ export const getProductsDb = async (
   const skip = (page - 1) * limit;
 
   const [products, total] = await Promise.all([
-    Product.find()
+    Product.find({ isDeleted: false })
       .populate("category", "name")
+      .select("name description price category stock stockStatus lowStockThreshold images createdAt updatedAt")
       .skip(skip)
       .limit(limit),
-    Product.countDocuments(),
+    Product.countDocuments({ isDeleted: false }),
   ]);
 
   return {
@@ -73,6 +74,25 @@ export const getProductsDb = async (
     total,
     totalPages: Math.ceil(total / limit),
   };
+};
+
+// ・・・・・・・・・・・・・・・  Get Single Product ・・・・・・・・・・・・・・・
+
+// 📌
+export const getProductDb = async (productId: string): Promise<IProduct> => {
+  const product = await Product.findOne({ _id: productId, isDeleted: false })
+    .populate("category", "name")
+    .select("name description price category stock stockStatus lowStockThreshold images createdAt updatedAt");
+
+  if (!product) {
+    throw new AppError(
+      "Product not found",
+      "Resource not found: Product does not exist",
+      404
+    );
+  }
+
+  return product;
 };
 
 // ・・・・・・・・・・・・・・・  Update Product ・・・・・・・・・・・・・・・

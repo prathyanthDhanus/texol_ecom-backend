@@ -21,10 +21,18 @@ export const addToCartDb = async (
     );
   }
 
+  if (product.stock === 0) {
+    throw new AppError(
+      "Product out of stock",
+      `Sorry, ${product.name} is currently out of stock`,
+      400
+    );
+  }
+
   if (product.stock < quantity) {
     throw new AppError(
       "Insufficient stock",
-      "The requested quantity exceeds available stock",
+      `Sorry, only ${product.stock} items of ${product.name} are available`,
       400
     );
   }
@@ -75,7 +83,7 @@ export const addToCartDb = async (
 // 📌
 export const getCartDb = async (userId: string) => {
   const cart = await Cart.findOne({ userId: new Types.ObjectId(userId) })
-    .populate("items.productId", "name price images stock")
+    .populate("items.productId", "name price images stock stockStatus lowStockThreshold")
     .lean();
 
   if (!cart) {
@@ -134,10 +142,18 @@ export const updateCartItemDb = async (
     );
   }
 
+  if (product.stock === 0) {
+    throw new AppError(
+      "Product out of stock",
+      `Sorry, ${product.name} is currently out of stock`,
+      400
+    );
+  }
+
   if (product.stock < quantity) {
     throw new AppError(
       "Insufficient stock",
-      "The requested quantity exceeds available stock",
+      `Sorry, only ${product.stock} items of ${product.name} are available`,
       400
     );
   }

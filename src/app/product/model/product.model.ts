@@ -69,5 +69,39 @@ const productSchema: Schema = new Schema<IProduct>(
   }
 );
 
+// Pre-save middleware to automatically update stock status
+productSchema.pre('save', function(next) {
+  const doc = this as any;
+  if (doc.stock === 0) {
+    doc.stockStatus = 'out-of-stock';
+  } else if (doc.stock <= doc.lowStockThreshold) {
+    doc.stockStatus = 'low-stock';
+  } else {
+    doc.stockStatus = 'in-stock';
+  }
+  
+  doc.lastStockUpdate = new Date();
+  next();
+});
+
+// Pre-update middleware to handle stock status updates
+productSchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate() as any;
+  
+  if (update.stock !== undefined) {
+    if (update.stock === 0) {
+      update.stockStatus = 'out-of-stock';
+    } else if (update.stock <= (update.lowStockThreshold || 10)) {
+      update.stockStatus = 'low-stock';
+    } else {
+      update.stockStatus = 'in-stock';
+    }
+    
+    update.lastStockUpdate = new Date();
+  }
+  
+  next();
+});
+
 const Product = mongoose.model<IProduct>("Product", productSchema);
 export default Product;

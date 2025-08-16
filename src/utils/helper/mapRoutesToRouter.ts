@@ -22,47 +22,27 @@ export interface RouteDefinitionWithUploads<
   uploadMiddleware?: RequestHandler;
 }
 
-export const mapRoutesToRouter = (
-  router: Router,
-  routes: RouteDefinition[],
-  validateAndHandle: (
-    schema: Schema | null,
-    handler: any
-  ) => RequestHandler[]
-): void => {
-  routes.forEach(({ method, path, roles, validator, handler }) => {
-    const middlewares: RequestHandler[] = [roles];
-    if (validator) {
-      middlewares.push(...validateAndHandle(validator, handler));
-    } else {
-      middlewares.push(handler);
-    }
-    router[method](path, ...middlewares);
-  });
-};
-
 export const mapRoutesToRouterWithUploads = (
   router: Router,
   routes: RouteDefinitionWithUploads[],
-  validateAndHandle: (
-    schema: Schema | null,
-    handler: any
-  ) => RequestHandler[]
+  validateAndHandle: (schema: Schema | null, handler: any) => RequestHandler[]
 ): void => {
-  routes.forEach(({ method, path, roles, validator, handler, uploadMiddleware }) => {
-    const middlewares: RequestHandler[] = [roles];
-    
-    // Add file upload middleware if specified
-    if (uploadMiddleware) {
-      middlewares.push(uploadMiddleware);
+  routes.forEach(
+    ({ method, path, roles, validator, handler, uploadMiddleware }) => {
+      const middlewares: RequestHandler[] = [roles];
+
+      // Add file upload middleware if specified
+      if (uploadMiddleware) {
+        middlewares.push(uploadMiddleware);
+      }
+
+      if (validator) {
+        middlewares.push(...validateAndHandle(validator, handler));
+      } else {
+        middlewares.push(handler);
+      }
+
+      router[method](path, ...middlewares);
     }
-    
-    if (validator) {
-      middlewares.push(...validateAndHandle(validator, handler));
-    } else {
-      middlewares.push(handler);
-    }
-    
-    router[method](path, ...middlewares);
-  });
+  );
 };

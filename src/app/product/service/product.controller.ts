@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   createProductDb,
   getProductsDb,
+  getProductDb,
   updateProductDb,
   deleteProductDb,
   restoreProductDb
@@ -86,6 +87,24 @@ export const getProducts = async (req: Request, res: Response) => {
       page,
       totalPages,
     },
+  });
+};
+
+// ・・・・・・・・・・・・・・・  Get Single Product ・・・・・・・・・・・・・・・
+
+// 📌
+export const getProduct = async (
+  req: Request<{ productId: string }>,
+  res: Response
+) => {
+  const { productId } = req.params;
+
+  const product = await getProductDb(productId);
+
+  return res.status(200).json({
+    status: "success",
+    message: "Product fetched successfully",
+    data: product,
   });
 };
 
