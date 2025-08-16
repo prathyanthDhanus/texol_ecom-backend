@@ -97,18 +97,21 @@ export const createOrderDb = async ({
 // 📌
 export const getOrdersDb = async (
   page: number,
-  limit: number
+  limit: number,
+  userId?: string
 ): Promise<{ orders: IOrder[]; total: number; totalPages: number }> => {
   const skip = (page - 1) * limit;
+  
+  const filter = userId ? { user: userId } : {};
 
   const [orders, total] = await Promise.all([
-    Order.find()
+    Order.find(filter)
       .populate("user", "username email")
       .populate("products.product", "name price images")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
-    Order.countDocuments(),
+    Order.countDocuments(filter),
   ]);
 
   return {
@@ -121,8 +124,13 @@ export const getOrdersDb = async (
 // ・・・・・・・・・・・・・・・  Get A Single Order ・・・・・・・・・・・・・・・
 
 // 📌
-export const getOrderDb = async (orderId: string): Promise<IOrder> => {
-  const order = await Order.findById(orderId)
+export const getOrderDb = async (orderId: string, userId?: string): Promise<IOrder> => {
+  const filter: any = { _id: orderId };
+  if (userId) {
+    filter.user = userId;
+  }
+
+  const order = await Order.findOne(filter)
     .populate("user", "username email")
     .populate("products.product", "name price images");
 

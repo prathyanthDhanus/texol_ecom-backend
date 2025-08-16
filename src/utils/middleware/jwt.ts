@@ -1,11 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
-interface DecodedToken {
+interface DecodedToken extends JwtPayload {
   userId: string;
   email: string;
-  role: string;
-  [key: string]: any;
+  role: "user" | "admin";
 }
 
 declare global {
@@ -16,107 +15,67 @@ declare global {
   }
 }
 
-export const tokenVerifyUser = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const authHeader = req.headers.authorization;
+const ROLE_SECRETS = Object.freeze({
+  user: process.env.USER_SECRET_KEY as string,
+  admin: process.env.ADMIN_SECRET_KEY as string,
+});
 
-  //  Check if authorization header exists
-  if (!authHeader) {
-    return res.status(401).json({ error: "Unauthorized 🚫" });
-  }
+if (!ROLE_SECRETS.user || !ROLE_SECRETS.admin) {
+  throw new Error("❌ Missing required secret keys in environment variables");
+}
 
-  //  Extract token from header
-  const tokenParts = authHeader.split(" ");
-  if (tokenParts.length !== 2 || tokenParts[0] !== "Bearer") {
-    return res.status(401).json({ error: "Invalid authorization format" });
-  }
+export function authorize(allowedRoles: ("user" | "admin")[]) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
 
-  const token = tokenParts[1];
-
-  // Verify the token
-  jwt.verify(token, process.env.USERSECRET_KEY as string, (err, decoded) => {
-    if (err) {
-      let errorMessage = "Invalid token ❌";
-      if (err.name === "TokenExpiredError") {
-        errorMessage = "Token expired ⏳";
-      } else if (err.name === "JsonWebTokenError") {
-        errorMessage = "Malformed token 🛑";
-      }
-      return res.status(403).json({ error: errorMessage });
+    if (!authHeader?.startsWith("Bearer ")) {
+      res.status(401).json({
+        error: "🔐 Unauthorized - Missing or invalid authorization header",
+      });
+      return;
     }
 
-    req.user = decoded as DecodedToken;
-    next();
-  });
-};
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      res.status(401).json({ error: "🛑 Missing token" });
+      return;
+    }
 
-// import { Request, Response, NextFunction } from "express";
-// import jwt from "jsonwebtoken";
+    try {
+      const decoded = jwt.decode(token) as DecodedToken | null;
 
-// interface DecodedToken {
-//   userId: string;
-//   email: string;
-//   role: "user" | "admin";
-//   [key: string]: any;
-// }
+      if (!decoded?.role || !decoded.userId) {
+        res.status(401).json({ error: "🛑 Invalid token payload" });
+        return;
+      }
 
-// declare global {
-//   namespace Express {
-//     interface Request {
-//       user?: DecodedToken;
-//     }
-//   }
-// }
+      if (!allowedRoles.includes(decoded.role)) {
+        res
+          .status(403)
+          .json({ error: "⛔ Forbidden - Insufficient privileges" });
+        return;
+      }
 
-// // Map roles to their corresponding secret keys
-// const roleSecrets: Record<string, string> = {
-//   user: process.env.USERSECRET_KEY as string,
-//   admin: process.env.ADMINSECRET_KEY as string,
-// };
+      const secret = ROLE_SECRETS[decoded.role];
 
-// export function tokenVerify(allowedRoles: string[]) {
-//   return (req: Request, res: Response, next: NextFunction) => {
-//     const authHeader = req.headers.authorization;
+      const verified = jwt.verify(token, secret) as DecodedToken;
 
-//     if (!authHeader) {
-//       return res.status(401).json({ error: "Unauthorized 🚫" });
-//     }
+      req.user = verified;
 
-//     const tokenParts = authHeader.split(" ");
-//     if (tokenParts.length !== 2 || tokenParts[0] !== "Bearer") {
-//       return res.status(401).json({ error: "Invalid authorization format" });
-//     }
+      next();
+    } catch (err) {
+      if (err instanceof jwt.TokenExpiredError) {
+        res.status(401).json({ error: "⏳ Token expired" });
+        return;
+      }
+      if (err instanceof jwt.JsonWebTokenError) {
+        res.status(401).json({ error: "❌ Invalid token" });
+        return;
+      }
 
-//     const token = tokenParts[1];
-
-//     try {
-//       const decodedUnverified = jwt.decode(token) as DecodedToken | null;
-//       if (!decodedUnverified || !decodedUnverified.role) {
-//         return res.status(401).json({ error: "Invalid token payload" });
-//       }
-
-//       if (!allowedRoles.includes(decodedUnverified.role)) {
-//         return res.status(403).json({ error: "Forbidden ❌" });
-//       }
-
-//       const secretKey = roleSecrets[decodedUnverified.role];
-//       if (!secretKey) {
-//         return res.status(403).json({ error: "Unknown role" });
-//       }
-//       const verified = jwt.verify(token, secretKey) as DecodedToken;
-//       req.user = verified;
-//       next();
-//     } catch (err: any) {
-//       let errorMessage = "Invalid token ❌";
-//       if (err.name === "TokenExpiredError") {
-//         errorMessage = "Token expired ⏳";
-//       } else if (err.name === "JsonWebTokenError") {
-//         errorMessage = "Malformed token 🛑";
-//       }
-//       return res.status(403).json({ error: errorMessage });
-//     }
-//   };
-// }
+      console.error("🔴 JWT verification error:", err);
+      res.status(500).json({ error: "⚡ Internal server error" });
+      return;
+    }
+  };
+}

@@ -6,8 +6,11 @@ export interface IProduct extends Document {
   price: number;
   category: mongoose.Types.ObjectId;
   stock: number;
+  lowStockThreshold: number;
   images: string[]; 
   isDeleted: boolean;
+  stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock';
+  lastStockUpdate: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +41,11 @@ const productSchema: Schema = new Schema<IProduct>(
       required: true,
       min: 0,
     },
+    lowStockThreshold: {
+      type: Number,
+      default: 10,
+      min: 0,
+    },
     images: {
       type: [String],
       default: [],
@@ -45,6 +53,15 @@ const productSchema: Schema = new Schema<IProduct>(
     isDeleted: {
       type: Boolean,
       default: false,
+    },
+    stockStatus: {
+      type: String,
+      enum: ['in-stock', 'low-stock', 'out-of-stock'],
+      default: 'in-stock',
+    },
+    lastStockUpdate: {
+      type: Date,
+      default: Date.now,
     },
   },
   {

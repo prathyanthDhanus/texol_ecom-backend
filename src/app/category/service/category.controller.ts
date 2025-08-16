@@ -55,15 +55,20 @@ export const updateCategory = async (
   req: Request<{ categoryId: string }, {}, categoryRequestBody>,
   res: Response
 ) => {
-  const { name, description,isDeleted } = req.body;
+  const { name, description, isDeleted } = req.body;
   const { categoryId } = req.params;
   
-  const updatedCategory = await updateCategoryDb({
+  const updateData: any = {
     categoryId,
     name,
     description,
-    isDeleted
-  });
+  };
+  
+  if (isDeleted !== undefined) {
+    updateData.isDeleted = isDeleted;
+  }
+  
+  const updatedCategory = await updateCategoryDb(updateData);
 
   return res.status(200).json({
     status: "success",

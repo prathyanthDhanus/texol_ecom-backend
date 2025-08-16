@@ -8,6 +8,7 @@ interface ProductDbParams {
   price: number;
   category: string;
   stock: number;
+  lowStockThreshold?: number;
   images?: string[];
 }
 
@@ -24,6 +25,7 @@ export const createProductDb = async ({
   price,
   category,
   stock,
+  lowStockThreshold,
   images = [],
 }: ProductDbParams): Promise<IProduct> => {
   const categoryExists = await Category.findById(category);
@@ -41,6 +43,7 @@ export const createProductDb = async ({
     price,
     category,
     stock,
+    lowStockThreshold,
     images,
   });
 

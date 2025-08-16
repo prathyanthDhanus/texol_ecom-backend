@@ -20,9 +20,9 @@ interface RefreshTokenRequest extends Request {
   };
 }
 
-const secretKey = process.env.USERSECRET_KEY;
+const secretKey = process.env.USER_SECRET_KEY;
 if (!secretKey) {
-  throw new Error("USERSECRET_KEY is not configured in environment variables");
+  throw new Error("USER_SECRET_KEY is not configured in environment variables");
 }
 
 // ・・・・・・・・・・・・・・・ Generate token ・・・・・・・・・・・・・・・
