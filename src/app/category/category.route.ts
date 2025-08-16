@@ -12,23 +12,30 @@ import {
   deleteCategory,
   restoreCategory,
 } from "./service/category.controller";
+import { authorize } from "../../utils/middleware/jwt";
 
 const router = express.Router();
 
-router.post("/", validateAndHandle(categorySchema, createCategory));
+router.post(
+  "/",
+  authorize(["admin"]),
+  validateAndHandle(categorySchema, createCategory)
+);
 
-router.get("/", getCategories);
+router.get("/", authorize(["admin", "user"]), getCategories);
 
 router.put(
   "/:categoryId",
+  authorize(["admin"]),
   validateAndHandle(categoryUpdateSchema, updateCategory)
 );
 
 router.patch(
   "/:categoryId/restore",
+  authorize(["admin"]),
   validateAndHandle(categoryRestoreSchema, restoreCategory)
 );
-router.patch("/:categoryId", deleteCategory);
+router.patch("/:categoryId", authorize(["admin"]), deleteCategory);
 
 export const Category_Router = router;
 export default Category_Router;

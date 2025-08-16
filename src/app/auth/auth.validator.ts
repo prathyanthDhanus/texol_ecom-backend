@@ -15,6 +15,5 @@ export const loginSchema = Joi.object({
 });
 //================== Refreshtoken validator =================
 export const refreshTokenSchema = Joi.object({
-  token: Joi.string().required()
-  
+  refreshToken: Joi.string().required()
 });

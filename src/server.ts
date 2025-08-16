@@ -9,12 +9,12 @@ const PORT = process.env.PORT || 3000;
 
 // Enhanced environment validation
 const requiredEnvVars = [
-  "USERSECRET_KEY", 
-  "ADMINSECRET_KEY",
+  "ADMIN_SECRET_KEY",
+  "USER_SECRET_KEY",
   "MONGODB_URL",
   "CLOUDINARY_CLOUD_NAME",
   "CLOUDINARY_API_KEY",
-  "CLOUDINARY_API_SECRET"
+  "CLOUDINARY_API_SECRET",
 ];
 
 requiredEnvVars.forEach((env) => {
@@ -24,12 +24,13 @@ requiredEnvVars.forEach((env) => {
 });
 
 // MongoDB connection with better error handling
-mongoose.connect(url)
+mongoose
+  .connect(url)
   .then(() => console.log("MongoDB connected successfully"))
   .catch((error) => {
     console.error("MongoDB connection error:", error);
     process.exit(1);
-});
+  });
 
 // Server error handling
 httpServer.on("error", (error) => {
@@ -38,5 +39,5 @@ httpServer.on("error", (error) => {
 
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
 });

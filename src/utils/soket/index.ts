@@ -12,7 +12,25 @@ export const initializeSocket = (io: Server) => {
     // Join room for admin notifications
     if (socket.data.isAdmin) {
       socket.join("admin-room");
+      console.log(`Admin ${socket.data.userId} joined admin-room`);
     }
+
+    // Join user-specific room for order updates
+    if (socket.data.userId) {
+      socket.join(`user-${socket.data.userId}`);
+      console.log(`User ${socket.data.userId} joined user-${socket.data.userId} room`);
+    }
+
+    // Handle client events
+    socket.on("join-room", (room: string) => {
+      socket.join(room);
+      console.log(`Client ${socket.id} joined room: ${room}`);
+    });
+
+    socket.on("leave-room", (room: string) => {
+      socket.leave(room);
+      console.log(`Client ${socket.id} left room: ${room}`);
+    });
 
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
@@ -25,17 +43,54 @@ export const initializeSocket = (io: Server) => {
 // Utility functions to emit events
 export const SocketEvents = {
   emitNewOrder: (io: Server, order: IOrder) => {
-    io.to("admin-room").emit("new-order", order);
+    io.to("admin-room").emit("new-order", {
+      type: "new-order",
+      order: order,
+      timestamp: new Date().toISOString()
+    });
   },
   emitInventoryUpdate: (io: Server, product: IProduct) => {
     io.emit("inventory-update", {
+      type: "inventory-update",
       productId: product._id,
       stock: product.stock,
-      name: product.name
+      name: product.name,
+      stockStatus: product.stockStatus,
+      timestamp: new Date().toISOString()
+    });
+  },
+  emitProductDeleted: (io: Server, product: IProduct) => {
+    io.emit("product-deleted", {
+      type: "product-deleted",
+      productId: product._id,
+      name: product.name,
+      timestamp: new Date().toISOString()
     });
   },
   emitOrderStatusUpdate: (io: Server, order: IOrder) => {
-    io.to(`user-${order.user}`).emit("order-status-update", order);
-    io.to("admin-room").emit("order-updated", order);
+    io.to(`user-${order.user}`).emit("order-status-update", {
+      type: "order-status-update",
+      order: order,
+      timestamp: new Date().toISOString()
+    });
+    io.to("admin-room").emit("order-updated", {
+      type: "order-updated",
+      order: order,
+      timestamp: new Date().toISOString()
+    });
+  },
+  emitStockAlert: (io: Server, alert: any) => {
+    io.to("admin-room").emit("stock-alert", {
+      type: "stock-alert",
+      alert: alert,
+      timestamp: new Date().toISOString()
+    });
+  },
+  emitStockReport: (io: Server, report: any) => {
+    io.to("admin-room").emit("stock-report", {
+      type: "stock-report",
+      report: report,
+      timestamp: new Date().toISOString()
+    });
   }
 };

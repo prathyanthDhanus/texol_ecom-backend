@@ -7,6 +7,7 @@ import {
   restoreProductDb
 } from "./product.db";
 import { uploadToCloudinary } from "../../../utils/cloudinary/cloudinary";
+import { SocketEvents } from "../../../utils/soket";
 
 interface ProductRequestBody {
   name: string;
@@ -14,6 +15,7 @@ interface ProductRequestBody {
   price: number;
   category: string;
   stock: number;
+  lowStockThreshold?: number;
   images?: Express.Multer.File[];
 }
 
@@ -23,6 +25,7 @@ interface ProductDbBody {
   price: number;
   category: string;
   stock: number;
+  lowStockThreshold: number;
   images: string[];
 }
 
@@ -43,7 +46,7 @@ export const createProduct = async (
     );
   }
 
-  const { name, description, price, category, stock } = req.body;
+  const { name, description, price, category, stock, lowStockThreshold } = req.body;
 
   const product = await createProductDb({
     name,
@@ -51,8 +54,13 @@ export const createProduct = async (
     price: Number(price),
     category,
     stock: Number(stock),
+    lowStockThreshold: lowStockThreshold ? Number(lowStockThreshold) : 10,
     images: imageUrls,
   });
+
+  // Emit new product notification to all users
+  const io = req.app.get("io");
+  SocketEvents.emitInventoryUpdate(io, product);
 
   return res.status(201).json({
     status: "success",
@@ -107,6 +115,12 @@ export const updateProduct = async (
     ...updateData,
   });
 
+  // Emit inventory update notification if stock changed
+  if (req.body.stock !== undefined) {
+    const io = req.app.get("io");
+    SocketEvents.emitInventoryUpdate(io, updatedProduct);
+  }
+
   return res.status(200).json({
     status: "success",
     message: "Product updated successfully",
@@ -139,6 +153,10 @@ export const deleteProduct = async (
 ) => {
   const { productId } = req.params;
   const deletedProduct = await deleteProductDb(productId);
+
+  // Emit product deletion notification
+  const io = req.app.get("io");
+  SocketEvents.emitProductDeleted(io, deletedProduct);
 
   return res.status(200).json({
     status: "success",

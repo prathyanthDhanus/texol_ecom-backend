@@ -30,8 +30,8 @@ const config: Config = {
     env: process.env.NODE_ENV || "development",
   },
   jwt: {
-    secret: process.env.USERSECRET_KEY || "",
-    adminSecret: process.env.ADMINSECRET_KEY || "",
+    secret: process.env.USER_SECRET_KEY || "",
+    adminSecret: process.env.ADMIN_SECRET_KEY || "",
     expiresIn: process.env.JWT_EXPIRES_IN || "1d",
   },
   cloudinary: {

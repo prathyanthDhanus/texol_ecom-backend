@@ -8,14 +8,27 @@ import {
   updateOrder,
   deleteOrder,
 } from "./service/order.controller";
+import { authorize } from "../../utils/middleware/jwt";
 
 const router = express.Router();
 
-router.post("/", validateAndHandle(orderSchema, createOrder));
-router.get("/", getOrders);
-router.get("/:orderId", getOrder);
-router.put("/:orderId", validateAndHandle(orderUpdateSchema, updateOrder));
-router.delete("/:orderId", deleteOrder);
+router.post(
+  "/",
+  authorize(["user", "admin"]),
+  validateAndHandle(orderSchema, createOrder)
+);
+
+router.get("/", authorize(["user", "admin"]), getOrders);
+
+router.get("/:orderId", authorize(["user", "admin"]), getOrder);
+
+router.put(
+  "/:orderId",
+  authorize(["admin"]),
+  validateAndHandle(orderUpdateSchema, updateOrder)
+);
+
+router.delete("/:orderId", authorize(["admin"]), deleteOrder);
 
 export const Order_Router = router;
 export default Order_Router;
