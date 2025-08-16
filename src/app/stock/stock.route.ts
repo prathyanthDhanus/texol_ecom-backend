@@ -1,4 +1,4 @@
-import express from "express";
+import express, { RequestHandler } from "express";
 import { validateAndHandle } from "../../utils/helper/ValidateAndHandle";
 import {
   updateStockSchema,
@@ -17,40 +17,82 @@ import {
   triggerStockMonitoring,
 } from "./service/stock.controller";
 import { authorize } from "../../utils/middleware/jwt";
+import {
+  mapRoutesToRouterWithUploads,
+  RouteDefinitionWithUploads,
+} from "../../utils/helper/mapRoutesToRouter";
 
 const router = express.Router();
 
-// All stock operations require admin authentication
-const adminAuth = authorize(["admin"]);
+// Role specific middlewares
+const adminOnly = authorize(["admin"]);
 
-// Stock Reports and Analytics
-router.get("/report", adminAuth, getStockReport);
-router.get("/status/:status", adminAuth, getProductsByStatus);
-router.get("/low-stock", adminAuth, getLowStockProducts);
-router.get("/out-of-stock", adminAuth, getOutOfStockProducts);
+// Route definitions
+const routes: RouteDefinitionWithUploads[] = [
+  // Stock Reports and Analytics
+  {
+    method: "get",
+    path: "/report",
+    roles: adminOnly,
+    handler: getStockReport as unknown as RequestHandler,
+  },
+  {
+    method: "get",
+    path: "/status/:status",
+    roles: adminOnly,
+    handler: getProductsByStatus as unknown as RequestHandler,
+  },
+  {
+    method: "get",
+    path: "/low-stock",
+    roles: adminOnly,
+    handler: getLowStockProducts as unknown as RequestHandler,
+  },
+  {
+    method: "get",
+    path: "/out-of-stock",
+    roles: adminOnly,
+    handler: getOutOfStockProducts as unknown as RequestHandler,
+  },
+  // Stock Management
+  {
+    method: "put",
+    path: "/:productId",
+    roles: adminOnly,
+    validator: updateStockSchema,
+    handler: updateProductStock as unknown as RequestHandler,
+  },
+  {
+    method: "patch",
+    path: "/:productId/threshold",
+    roles: adminOnly,
+    validator: setThresholdSchema,
+    handler: setStockThreshold as unknown as RequestHandler,
+  },
+  {
+    method: "post",
+    path: "/bulk-update",
+    roles: adminOnly,
+    validator: bulkUpdateStockSchema,
+    handler: bulkUpdateStock as unknown as RequestHandler,
+  },
+  // Stock History and Monitoring
+  {
+    method: "get",
+    path: "/:productId/history",
+    roles: adminOnly,
+    handler: getStockHistory as unknown as RequestHandler,
+  },
+  {
+    method: "post",
+    path: "/monitor",
+    roles: adminOnly,
+    handler: triggerStockMonitoring as unknown as RequestHandler,
+  },
+];
 
-// Stock Management
-router.put(
-  "/:productId",
-  adminAuth,
-  validateAndHandle(updateStockSchema, updateProductStock)
-);
-
-router.patch(
-  "/:productId/threshold",
-  adminAuth,
-  validateAndHandle(setThresholdSchema, setStockThreshold)
-);
-
-router.post(
-  "/bulk-update",
-  adminAuth,
-  validateAndHandle(bulkUpdateStockSchema, bulkUpdateStock)
-);
-
-// Stock History and Monitoring
-router.get("/:productId/history", adminAuth, getStockHistory);
-router.post("/monitor", adminAuth, triggerStockMonitoring);
+//🎯
+mapRoutesToRouterWithUploads(router, routes, validateAndHandle);
 
 export const Stock_Router = router;
 export default Stock_Router;

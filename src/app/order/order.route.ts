@@ -1,4 +1,4 @@
-import express from "express";
+import express, { RequestHandler } from "express";
 import { validateAndHandle } from "../../utils/helper/ValidateAndHandle";
 import { orderSchema, orderUpdateSchema } from "./order.validator";
 import {
@@ -9,26 +9,55 @@ import {
   deleteOrder,
 } from "./service/order.controller";
 import { authorize } from "../../utils/middleware/jwt";
+import {
+  mapRoutesToRouterWithUploads,
+  RouteDefinitionWithUploads,
+} from "../../utils/helper/mapRoutesToRouter";
 
 const router = express.Router();
 
-router.post(
-  "/",
-  authorize(["user", "admin"]),
-  validateAndHandle(orderSchema, createOrder)
-);
+// Role specific middlewares
+const adminOnly = authorize(["admin"]);
+const adminAndUser = authorize(["user", "admin"]);
 
-router.get("/", authorize(["user", "admin"]), getOrders);
+// Route definitions
+const routes: RouteDefinitionWithUploads[] = [
+  {
+    method: "post",
+    path: "/",
+    roles: adminAndUser,
+    validator: orderSchema,
+    handler: createOrder as unknown as RequestHandler,
+  },
+  {
+    method: "get",
+    path: "/",
+    roles: adminAndUser,
+    handler: getOrders as unknown as RequestHandler,
+  },
+  {
+    method: "get",
+    path: "/:orderId",
+    roles: adminAndUser,
+    handler: getOrder as unknown as RequestHandler,
+  },
+  {
+    method: "put",
+    path: "/:orderId",
+    roles: adminOnly,
+    validator: orderUpdateSchema,
+    handler: updateOrder as unknown as RequestHandler,
+  },
+  {
+    method: "delete",
+    path: "/:orderId",
+    roles: adminOnly,
+    handler: deleteOrder as unknown as RequestHandler,
+  },
+];
 
-router.get("/:orderId", authorize(["user", "admin"]), getOrder);
-
-router.put(
-  "/:orderId",
-  authorize(["admin"]),
-  validateAndHandle(orderUpdateSchema, updateOrder)
-);
-
-router.delete("/:orderId", authorize(["admin"]), deleteOrder);
+//🎯
+mapRoutesToRouterWithUploads(router, routes, validateAndHandle);
 
 export const Order_Router = router;
 export default Order_Router;
