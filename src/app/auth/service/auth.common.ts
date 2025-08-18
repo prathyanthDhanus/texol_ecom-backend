@@ -40,7 +40,7 @@ export const tokenService = async (
   checkSecrets();
   
   // Select the appropriate secret key based on role
-  const secretKey = role === 'admin' ? ADMIN_SECRET_KEY : USER_SECRET_KEY;
+  const secretKey = role === 'admin' ? ADMIN_SECRET_KEY! : USER_SECRET_KEY!;
   
   // Generate Access Token
   const accessToken = jwt.sign(
@@ -94,7 +94,7 @@ export const refreshTokenService = async (req: RefreshTokenRequest, res: Respons
     }
     
     // Select the appropriate secret key based on role
-    const secretKey = decodedWithoutVerification.role === 'admin' ? ADMIN_SECRET_KEY : USER_SECRET_KEY;
+    const secretKey = decodedWithoutVerification.role === 'admin' ? ADMIN_SECRET_KEY! : USER_SECRET_KEY!;
     
     const decoded = jwt.verify(refreshToken, secretKey) as TokenPayload;
     
