@@ -23,9 +23,12 @@ interface RefreshTokenRequest extends Request {
 const USER_SECRET_KEY = process.env.USER_SECRET_KEY;
 const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY;
 
-if (!USER_SECRET_KEY || !ADMIN_SECRET_KEY) {
-  throw new Error("USER_SECRET_KEY and ADMIN_SECRET_KEY must be configured in environment variables");
-}
+// Function to check if secrets are configured
+const checkSecrets = () => {
+  if (!USER_SECRET_KEY || !ADMIN_SECRET_KEY) {
+    throw new Error("USER_SECRET_KEY and ADMIN_SECRET_KEY must be configured in environment variables");
+  }
+};
 
 // ・・・・・・・・・・・・・・・ Generate token ・・・・・・・・・・・・・・・
 
@@ -33,6 +36,9 @@ export const tokenService = async (
   userId: string,
   role: string
 ): Promise<TokenResponse> => {
+  // Check if secrets are configured
+  checkSecrets();
+  
   // Select the appropriate secret key based on role
   const secretKey = role === 'admin' ? ADMIN_SECRET_KEY : USER_SECRET_KEY;
   
@@ -74,6 +80,9 @@ export const refreshTokenService = async (req: RefreshTokenRequest, res: Respons
   }
 
   try {
+    // Check if secrets are configured
+    checkSecrets();
+    
     // First, decode the token to get the role without verification
     const decodedWithoutVerification = jwt.decode(refreshToken) as TokenPayload;
     

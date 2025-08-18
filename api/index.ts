@@ -1,32 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import Main_Router from '../src/routes';
-import { errorHandler } from '../src/utils/customError/errorHandler';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
-
-// MongoDB connection
-const connectDB = async () => {
-  try {
-    const url = process.env.MONGODB_URL;
-    if (!url) {
-      throw new Error('MONGODB_URL is not defined');
-    }
-    await mongoose.connect(url);
-    console.log('✅ MongoDB connected successfully');
-  } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
-    throw error;
-  }
-};
-
-// Connect to database
-connectDB();
 
 // Middleware
 app.use(express.json({ limit: "10mb" }));
@@ -42,15 +21,27 @@ app.get('/api/v1/health', (req, res) => {
     status: 'OK', 
     message: 'Backend is running!',
     timestamp: new Date().toISOString(),
-    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    env: process.env.NODE_ENV || 'development'
   });
 });
 
-// Main routes
-app.use("/api/v1", Main_Router);
+// Test endpoint
+app.get('/api/v1/test', (req, res) => {
+  res.json({ 
+    message: "API is working!",
+    env: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Error handler
-app.use(errorHandler);
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    error: "Internal server error",
+    message: err.message || "Something went wrong"
+  });
+});
 
 // 404 handler
 app.use('*', (req, res) => {
