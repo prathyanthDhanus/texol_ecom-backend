@@ -15,7 +15,7 @@ const refreshTokenSchema = new Schema<IRefreshToken, IRefreshTokenModel>(
     token: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
     userId: {
       type: Schema.Types.ObjectId,
