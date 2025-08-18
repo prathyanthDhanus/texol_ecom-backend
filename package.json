@@ -16,6 +16,7 @@
   "dependencies": {
     "@types/multer": "^2.0.0",
     "@types/socket.io": "^3.0.1",
+    "@vercel/node": "^5.3.13",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.7.0",
     "cors": "^2.8.5",
