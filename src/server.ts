@@ -17,11 +17,15 @@ const requiredEnvVars = [
   "CLOUDINARY_API_SECRET",
 ];
 
-requiredEnvVars.forEach((env) => {
-  if (!process.env[env]) {
-    throw new Error(`Missing required environment variable: ${env}`);
-  }
-});
+// Only check environment variables in production
+if (process.env.NODE_ENV === 'production') {
+  requiredEnvVars.forEach((env) => {
+    if (!process.env[env]) {
+      console.error(`Missing required environment variable: ${env}`);
+      process.exit(1);
+    }
+  });
+}
 
 // MongoDB connection with better error handling
 mongoose
