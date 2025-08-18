@@ -40,7 +40,7 @@ const config: Config = {
     apiSecret: process.env.CLOUDINARY_API_SECRET || "",
   },
   client: {
-    url: process.env.CLIENT_URL || "http://localhost:3000",
+    url: process.env.CLIENT_URL || "https://superlative-seahorse-a01c14.netlify.app",
   },
 };
 

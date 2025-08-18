@@ -12,7 +12,7 @@ const httpServer = createServer(app);
 // Enhanced Socket.IO setup
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5000",
+    origin: process.env.CLIENT_URL || "https://superlative-seahorse-a01c14.netlify.app",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
