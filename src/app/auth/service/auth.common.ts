@@ -20,9 +20,11 @@ interface RefreshTokenRequest extends Request {
   };
 }
 
-const secretKey = process.env.USER_SECRET_KEY;
-if (!secretKey) {
-  throw new Error("USER_SECRET_KEY is not configured in environment variables");
+const USER_SECRET_KEY = process.env.USER_SECRET_KEY;
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY;
+
+if (!USER_SECRET_KEY || !ADMIN_SECRET_KEY) {
+  throw new Error("USER_SECRET_KEY and ADMIN_SECRET_KEY must be configured in environment variables");
 }
 
 // ・・・・・・・・・・・・・・・ Generate token ・・・・・・・・・・・・・・・
@@ -31,6 +33,9 @@ export const tokenService = async (
   userId: string,
   role: string
 ): Promise<TokenResponse> => {
+  // Select the appropriate secret key based on role
+  const secretKey = role === 'admin' ? ADMIN_SECRET_KEY : USER_SECRET_KEY;
+  
   // Generate Access Token
   const accessToken = jwt.sign(
     { userId, role },
@@ -69,6 +74,19 @@ export const refreshTokenService = async (req: RefreshTokenRequest, res: Respons
   }
 
   try {
+    // First, decode the token to get the role without verification
+    const decodedWithoutVerification = jwt.decode(refreshToken) as TokenPayload;
+    
+    if (!decodedWithoutVerification?.role) {
+      return res.status(403).json({ 
+        status: "error",
+        message: "Invalid refresh token - missing role" 
+      });
+    }
+    
+    // Select the appropriate secret key based on role
+    const secretKey = decodedWithoutVerification.role === 'admin' ? ADMIN_SECRET_KEY : USER_SECRET_KEY;
+    
     const decoded = jwt.verify(refreshToken, secretKey) as TokenPayload;
     
     const existingToken = await RefreshToken.findOne({
@@ -97,7 +115,7 @@ export const refreshTokenService = async (req: RefreshTokenRequest, res: Respons
       },
     });
   } catch (error) {
-    console.error("Refresh token error:", error);
+    // Refresh token error
     
     if (error instanceof jwt.TokenExpiredError) {
       return res.status(403).json({

@@ -35,4 +35,8 @@ export const productUpdateSchema = Joi.object({
     .optional(),
   stock: Joi.number().integer().min(0).optional(),
   images: Joi.array().items(Joi.string()).optional(),
-}).or("name", "description", "price", "category", "stock", "images");
+  existingImages: Joi.alternatives().try(
+    Joi.string(),
+    Joi.array().items(Joi.string())
+  ).optional(),
+}).or("name", "description", "price", "category", "stock", "images", "existingImages");

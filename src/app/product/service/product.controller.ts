@@ -18,6 +18,7 @@ interface ProductRequestBody {
   stock: number;
   lowStockThreshold?: number;
   images?: Express.Multer.File[];
+  existingImages?: string | string[];
 }
 
 interface ProductDbBody {
@@ -52,7 +53,7 @@ export const createProduct = async (
   const product = await createProductDb({
     name,
     description,
-    price: Number(price),
+    price: parseFloat(parseFloat(price.toString()).toFixed(2)),
     category,
     stock: Number(stock),
     lowStockThreshold: lowStockThreshold ? Number(lowStockThreshold) : 10,
@@ -118,15 +119,47 @@ export const updateProduct = async (
   const { productId } = req.params;
 
   // Create update data excluding images from req.body
-  const { images: _, ...bodyWithoutImages } = req.body;
+  const { images: _, existingImages: __, ...bodyWithoutImages } = req.body;
   const updateData: Partial<ProductDbBody> = { ...bodyWithoutImages };
 
-  // Handle image updates separately
+  // Convert numeric fields to proper numbers
+  if (updateData.price !== undefined) {
+    // Handle price precision by treating it as a string and converting carefully
+    const priceStr = updateData.price.toString();
+    // Remove any scientific notation and ensure proper decimal handling
+    const cleanPrice = parseFloat(priceStr).toFixed(2);
+    updateData.price = parseFloat(cleanPrice);
+  }
+  if (updateData.stock !== undefined) {
+    updateData.stock = Number(updateData.stock);
+  }
+  if (updateData.lowStockThreshold !== undefined) {
+    updateData.lowStockThreshold = Number(updateData.lowStockThreshold);
+  }
+
+  // Handle image updates
+  let finalImages: string[] = [];
+
+  // Add existing images that weren't removed
+  if (req.body.existingImages) {
+    const existingImages = Array.isArray(req.body.existingImages) 
+      ? req.body.existingImages 
+      : [req.body.existingImages];
+    finalImages.push(...existingImages);
+  }
+
+  // Add new uploaded images
   if (req.files && Array.isArray(req.files)) {
     const files = req.files as Express.Multer.File[];
-    updateData.images = await Promise.all(
+    const newImageUrls = await Promise.all(
       files.map((file) => uploadToCloudinary(file.path))
     );
+    finalImages.push(...newImageUrls);
+  }
+
+  // Set the final images array
+  if (finalImages.length > 0) {
+    updateData.images = finalImages;
   }
 
   const updatedProduct = await updateProductDb({

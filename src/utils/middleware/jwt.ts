@@ -73,7 +73,7 @@ export function authorize(allowedRoles: ("user" | "admin")[]) {
         return;
       }
 
-      console.error("🔴 JWT verification error:", err);
+      // JWT verification error
       res.status(500).json({ error: "⚡ Internal server error" });
       return;
     }

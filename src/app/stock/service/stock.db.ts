@@ -33,7 +33,8 @@ export const getStockReportDb = async () => {
       Product.countDocuments({ isDeleted: false }),
       Product.countDocuments({ stock: { $gt: 0 }, isDeleted: false }),
       Product.countDocuments({
-        stock: { $gt: 0, $lte: { $ref: "lowStockThreshold" } },
+        $expr: { $lte: ["$stock", "$lowStockThreshold"] },
+        stock: { $gt: 0 },
         isDeleted: false,
       }),
       Product.countDocuments({ stock: 0, isDeleted: false }),
@@ -74,7 +75,8 @@ export const getProductsByStockStatusDb = async (
       filter.stock = { $gt: 0 };
       break;
     case "low-stock":
-      filter.stock = { $gt: 0, $lte: { $ref: "lowStockThreshold" } };
+      filter.$expr = { $lte: ["$stock", "$lowStockThreshold"] };
+      filter.stock = { $gt: 0 };
       break;
     case "out-of-stock":
       filter.stock = 0;
@@ -92,7 +94,8 @@ export const getProductsByStockStatusDb = async (
 // 📌
 export const getLowStockProductsDb = async () => {
   return await Product.find({
-    stock: { $gt: 0, $lte: { $ref: "lowStockThreshold" } },
+    $expr: { $lte: ["$stock", "$lowStockThreshold"] },
+    stock: { $gt: 0 },
     isDeleted: false,
   })
     .select("name price stock lowStockThreshold images category")

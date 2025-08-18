@@ -38,7 +38,6 @@ export const login = async (
   const { email, password } = req.body;
 
   const authUser = await loginDb({ email, password });
-
   return res.status(200).json({
     status: "success",
     message: "User logged in successfully",

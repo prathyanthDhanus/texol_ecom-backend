@@ -26,18 +26,18 @@ requiredEnvVars.forEach((env) => {
 // MongoDB connection with better error handling
 mongoose
   .connect(url)
-  .then(() => console.log("MongoDB connected successfully"))
+  .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((error) => {
-    console.error("MongoDB connection error:", error);
+          console.error("❌ MongoDB connection error:", error);
     process.exit(1);
   });
 
 // Server error handling
 httpServer.on("error", (error) => {
-  console.error("Server error:", error);
+        console.error("❌ Server error:", error);
 });
 
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 });

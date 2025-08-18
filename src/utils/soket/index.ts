@@ -7,33 +7,33 @@ export const initializeSocket = (io: Server) => {
   io.use(SocketMiddleware);
 
   io.on("connection", (socket) => {
-    console.log("New client connected:", socket.id);
+  
 
     // Join room for admin notifications
     if (socket.data.isAdmin) {
       socket.join("admin-room");
-      console.log(`Admin ${socket.data.userId} joined admin-room`);
+
     }
 
     // Join user-specific room for order updates
     if (socket.data.userId) {
       socket.join(`user-${socket.data.userId}`);
-      console.log(`User ${socket.data.userId} joined user-${socket.data.userId} room`);
+
     }
 
     // Handle client events
     socket.on("join-room", (room: string) => {
       socket.join(room);
-      console.log(`Client ${socket.id} joined room: ${room}`);
+  
     });
 
     socket.on("leave-room", (room: string) => {
       socket.leave(room);
-      console.log(`Client ${socket.id} left room: ${room}`);
+  
     });
 
     socket.on("disconnect", () => {
-      console.log("Client disconnected:", socket.id);
+  
     });
   });
 
