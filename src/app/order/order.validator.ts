@@ -11,10 +11,6 @@ const objectId = Joi.string().custom((value, helpers) => {
 
 //=================== Create Order Schema ==================
 export const orderSchema = Joi.object({
-  user: objectId.required().messages({
-    "any.required": "User ID is required",
-    "any.invalid": "Invalid User ID format",
-  }),
   products: Joi.array()
     .items(
       Joi.object({

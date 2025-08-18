@@ -20,6 +20,14 @@ export const createOrder = async (req: Request, res: Response) => {
   }
 
   const order = await createOrderDb({ ...req.body, user: userId });
+  
+  // Emit real-time notification for new order
+  const io = req.app.get("io");
+  if (io) {
+    const { SocketEvents } = require("../../../utils/soket");
+    SocketEvents.emitNewOrder(io, order);
+  }
+  
   return res.status(201).json({
     status: "success",
     message: "Order created successfully",
@@ -98,12 +106,11 @@ export const updateOrder = async (req: Request, res: Response) => {
     ...req.body,
   });
 
-  if (req.body.status) {
-    const io = req.app.get("io");
-    io.to(updatedOrder.user._id.toString()).emit(
-      "orderStatusUpdated",
-      updatedOrder
-    );
+  // Emit real-time notification for order status update
+  const io = req.app.get("io");
+  if (io) {
+    const { SocketEvents } = require("../../../utils/soket");
+    SocketEvents.emitOrderStatusUpdate(io, updatedOrder);
   }
 
   return res.status(200).json({

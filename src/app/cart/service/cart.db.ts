@@ -3,6 +3,34 @@ import Cart from "../model/cart.model";
 import Product from "../../product/model/product.model";
 import AppError from "../../../utils/customError/AppError";
 
+// Helper function to transform cart data structure for frontend
+const transformCartData = (cart: any) => {
+  if (!cart || !cart.items) {
+    return {
+      ...cart,
+      items: [],
+      total: 0,
+    };
+  }
+
+  return {
+    ...cart,
+    items: cart.items.map((item: any) => ({
+      _id: item._id,
+      product: {
+        _id: item.productId._id,
+        name: item.productId.name,
+        price: item.productId.price,
+        images: item.productId.images,
+        stock: item.productId.stock,
+      },
+      quantity: item.quantity,
+      stockStatus: item.productId.stockStatus || 'in-stock',
+    })),
+    total: cart.totalAmount,
+  };
+};
+
 // ・・・・・・・・・・・・・・・ Add to cart ・・・・・・・・・・・・・・・
 
 // 📌
@@ -75,7 +103,13 @@ export const addToCartDb = async (
   }
 
   await cart.save();
-  return cart;
+  
+  // Transform the data structure to match frontend expectations
+  const populatedCart = await Cart.findById(cart._id)
+    .populate("items.productId", "name price images stock stockStatus lowStockThreshold")
+    .lean();
+
+  return transformCartData(populatedCart);
 };
 
 // ・・・・・・・・・・・・・・・ Get cart ・・・・・・・・・・・・・・・
@@ -95,7 +129,7 @@ export const getCartDb = async (userId: string) => {
     };
   }
 
-  return cart;
+  return transformCartData(cart);
 };
 
 // ・・・・・・・・・・・・・・・ Update cart item ・・・・・・・・・・・・・・・
@@ -161,7 +195,12 @@ export const updateCartItemDb = async (
   item.quantity = quantity;
   await cart.save();
 
-  return cart;
+  // Transform the data structure to match frontend expectations
+  const populatedCart = await Cart.findById(cart._id)
+    .populate("items.productId", "name price images stock stockStatus lowStockThreshold")
+    .lean();
+
+  return transformCartData(populatedCart);
 };
 
 // ・・・・・・・・・・・・・・・ Remove from cart ・・・・・・・・・・・・・・・
@@ -188,7 +227,12 @@ export const removeFromCartDb = async (userId: string, itemId: string) => {
   cart.items.splice(itemIndex, 1);
   await cart.save();
 
-  return cart;
+  // Transform the data structure to match frontend expectations
+  const populatedCart = await Cart.findById(cart._id)
+    .populate("items.productId", "name price images stock stockStatus lowStockThreshold")
+    .lean();
+
+  return transformCartData(populatedCart);
 };
 
 // ・・・・・・・・・・・・・・・ Clear cart ・・・・・・・・・・・・・・・
@@ -203,5 +247,12 @@ export const clearCartDb = async (userId: string) => {
   cart.items = [];
   await cart.save();
 
-  return cart;
+  // Transform the data structure to match frontend expectations
+  const transformedCart = {
+    ...cart.toObject(),
+    items: [],
+    total: 0,
+  };
+
+  return transformedCart;
 };
